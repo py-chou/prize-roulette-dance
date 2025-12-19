@@ -19,15 +19,15 @@ export const AvatarRow = ({ participants, direction, spinPhase, rowIndex, totalR
   // Offset for staggered layout
   const offset = rowIndex % 2 === 1 ? 'ml-10' : '';
   
-  // Use fast speed for all spinning phases
+  // Slow for idle (carousel), fast for spinning phases
   const getAnimationDuration = () => {
     switch (spinPhase) {
-      case 'idle': return 1.5;
-      case 'accelerating': return 1.5;
-      case 'peak': return 1.5;
-      case 'decelerating': return 1.5;
+      case 'idle': return 30; // Slow carousel
+      case 'accelerating': return 1.5; // Fast
+      case 'peak': return 1.5; // Fast
+      case 'decelerating': return 1.5; // Fast
       case 'stopped': return 0;
-      default: return 1.5;
+      default: return 30;
     }
   };
 
