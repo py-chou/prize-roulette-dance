@@ -1,14 +1,17 @@
 import { Participant } from '@/types/participant';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WinnerCard } from './WinnerCard';
+import { RotateCcw, X } from 'lucide-react';
 
 interface WinnerRevealProps {
   winners: Participant[];
   isVisible: boolean;
+  onRedraw?: () => void;
+  onClose?: () => void;
 }
 
-export const WinnerReveal = ({ winners, isVisible }: WinnerRevealProps) => {
-  const displayWinners = winners.slice(0, 50); // Show max 50 at a time
+export const WinnerReveal = ({ winners, isVisible, onRedraw, onClose }: WinnerRevealProps) => {
+  const displayWinners = winners.slice(0, 50);
   const remainingCount = winners.length - displayWinners.length;
 
   return (
@@ -39,6 +42,17 @@ export const WinnerReveal = ({ winners, isVisible }: WinnerRevealProps) => {
             transition={{ type: 'spring', damping: 20 }}
             className="relative z-10 w-full max-w-6xl mx-4 max-h-[90vh] overflow-y-auto"
           >
+            {/* Close button */}
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              onClick={onClose}
+              className="absolute top-0 right-4 p-2 rounded-full bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </motion.button>
+
             {/* Title */}
             <motion.div
               initial={{ y: -30, opacity: 0 }}
@@ -77,6 +91,24 @@ export const WinnerReveal = ({ winners, isVisible }: WinnerRevealProps) => {
                 還有 {remainingCount} 位中獎者...
               </motion.p>
             )}
+
+            {/* Redraw button */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="flex justify-center mt-8 gap-4"
+            >
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onRedraw}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-secondary hover:bg-secondary/80 text-secondary-foreground font-medium transition-colors border border-border"
+              >
+                <RotateCcw className="w-5 h-5" />
+                重抽一次
+              </motion.button>
+            </motion.div>
           </motion.div>
 
           {/* Confetti particles */}
@@ -85,12 +117,12 @@ export const WinnerReveal = ({ winners, isVisible }: WinnerRevealProps) => {
               key={i}
               initial={{
                 opacity: 0,
-                x: Math.random() * window.innerWidth,
+                x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1000),
                 y: -20,
               }}
               animate={{
                 opacity: [0, 1, 1, 0],
-                y: window.innerHeight + 100,
+                y: (typeof window !== 'undefined' ? window.innerHeight : 800) + 100,
                 rotate: Math.random() * 360,
               }}
               transition={{
