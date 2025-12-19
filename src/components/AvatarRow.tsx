@@ -19,53 +19,27 @@ export const AvatarRow = ({ participants, direction, spinPhase, rowIndex, totalR
   // Offset for staggered layout
   const offset = rowIndex % 2 === 1 ? 'ml-10' : '';
   
-  // Calculate animation duration based on phase
+  // Use fast speed for all spinning phases
   const getAnimationDuration = () => {
     switch (spinPhase) {
-      case 'idle': return 40;
-      case 'accelerating': return 8;
+      case 'idle': return 1.5;
+      case 'accelerating': return 1.5;
       case 'peak': return 1.5;
-      case 'decelerating': return 12;
+      case 'decelerating': return 1.5;
       case 'stopped': return 0;
-      default: return 40;
+      default: return 1.5;
     }
   };
 
   // Staggered stop - rows stop one by one
   const stopDelay = rowIndex * 0.15;
   const isRowStopped = spinPhase === 'stopped';
-  
-  // Wave effect - rows have different timing
-  const waveOffset = Math.sin(rowIndex * 0.8) * 0.3;
+  const isSpinning = spinPhase !== 'idle' && spinPhase !== 'stopped';
   
   const duration = getAnimationDuration();
-  const isPeakPhase = spinPhase === 'peak';
-  const isSpinning = spinPhase !== 'idle' && spinPhase !== 'stopped';
 
   return (
     <div className={cn("overflow-hidden py-2 relative", offset)}>
-      {/* Spotlight scan effect during peak */}
-      {isPeakPhase && (
-        <motion.div
-          className="absolute inset-0 z-10 pointer-events-none"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          <motion.div
-            className="absolute top-0 bottom-0 w-32 bg-gradient-to-r from-transparent via-gold/20 to-transparent"
-            animate={{
-              x: ['-100%', '200%'],
-            }}
-            transition={{
-              duration: 0.8,
-              repeat: Infinity,
-              delay: rowIndex * 0.1,
-              ease: 'linear',
-            }}
-          />
-        </motion.div>
-      )}
-
       <motion.div
         className="flex gap-4"
         style={{ width: 'max-content' }}
@@ -87,9 +61,9 @@ export const AvatarRow = ({ participants, direction, spinPhase, rowIndex, totalR
                 delay: stopDelay,
               }
             : {
-                duration: duration + waveOffset,
+                duration: duration,
                 repeat: Infinity,
-                ease: isPeakPhase ? 'linear' : 'easeInOut',
+                ease: 'linear',
               }
         }
       >
@@ -97,37 +71,18 @@ export const AvatarRow = ({ participants, direction, spinPhase, rowIndex, totalR
           <motion.div
             key={`${participant.id}-${index}`}
             className="flex-shrink-0"
-            animate={
-              isPeakPhase
-                ? {
-                    scale: [1, 1.1, 1],
-                    opacity: [1, 0.7, 1],
-                  }
-                : isRowStopped
-                ? { scale: 1, opacity: 1, filter: 'blur(0px)' }
-                : {}
-            }
-            transition={
-              isPeakPhase
-                ? {
-                    duration: 0.3,
-                    repeat: Infinity,
-                    delay: (index % 5) * 0.05,
-                  }
-                : { duration: 0.3 }
-            }
             whileHover={spinPhase === 'idle' ? { scale: 1.1, zIndex: 10 } : {}}
           >
             <motion.div 
               className="relative group"
               animate={{
-                filter: isPeakPhase ? 'blur(3px)' : isSpinning ? 'blur(1px)' : 'blur(0px)',
+                filter: isSpinning ? 'blur(4px)' : 'blur(0px)',
               }}
               transition={{ duration: 0.3 }}
             >
               <div className={cn(
                 "w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 bg-card shadow-lg transition-all duration-300",
-                isPeakPhase ? "border-gold/50" : "border-secondary"
+                isSpinning ? "border-gold/50" : "border-secondary"
               )}>
                 <img
                   src={participant.avatar}
