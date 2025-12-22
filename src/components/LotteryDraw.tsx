@@ -5,6 +5,7 @@ import { generateParticipants, selectRandomWinners } from '@/utils/generateParti
 import { AvatarRow, SpinPhase } from './AvatarRow';
 import { WinnerReveal } from './WinnerReveal';
 import { DrawControls } from './DrawControls';
+import { DrawingPopup } from './DrawingPopup';
 
 const ROWS_COUNT = 6;
 
@@ -235,6 +236,9 @@ export const LotteryDraw = () => {
           onReset={handleReset}
         />
       </div>
+
+      {/* Drawing popup */}
+      <DrawingPopup isVisible={phase === 'spinning'} />
 
       {/* Winner reveal modal */}
       <WinnerReveal 
