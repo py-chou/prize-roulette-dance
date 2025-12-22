@@ -35,7 +35,7 @@ export const AddWinnerPopup = ({ winners, isVisible, onClose }: AddWinnerPopupPr
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.5, opacity: 0, y: 50 }}
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-            className="relative z-10 bg-card rounded-2xl shadow-2xl border-2 border-gold/30 w-[90vw] max-w-[600px] mx-4 overflow-visible"
+            className="relative z-10 bg-card rounded-2xl shadow-2xl border-2 border-gold/30 w-[90vw] max-w-[800px] mx-4 overflow-visible"
           >
             {/* Close button */}
             <button
@@ -63,7 +63,7 @@ export const AddWinnerPopup = ({ winners, isVisible, onClose }: AddWinnerPopupPr
               </motion.div>
 
               {/* Winners grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-h-[60vh] overflow-y-auto hide-scrollbar px-2">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 w-full max-h-[60vh] overflow-y-auto hide-scrollbar px-2">
                 {winners.map((winner, index) => (
                   <motion.div
                     key={winner.id}
@@ -141,7 +141,7 @@ export const AddWinnerPopup = ({ winners, isVisible, onClose }: AddWinnerPopupPr
                       </div>
                       
                       {/* Avatar */}
-                      <div className="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-4 border-gold relative z-10">
+                      <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-gold relative z-10">
                         <img
                           src={winner.avatar}
                           alt={winner.name}
@@ -157,7 +157,7 @@ export const AddWinnerPopup = ({ winners, isVisible, onClose }: AddWinnerPopupPr
                       transition={{ delay: 0.5 + index * 0.1 }}
                       className="text-center"
                     >
-                      <p className="text-lg md:text-xl font-extrabold text-gradient-gold mb-1">
+                      <p className="text-sm md:text-base font-extrabold text-gradient-gold mb-1">
                         {winner.name}
                       </p>
                       <p className="text-xs text-muted-foreground">
