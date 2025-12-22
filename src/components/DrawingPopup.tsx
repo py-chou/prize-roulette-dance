@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 
 interface DrawingPopupProps {
   isVisible: boolean;
@@ -15,188 +15,192 @@ export const DrawingPopup = ({ isVisible }: DrawingPopupProps) => {
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center"
         >
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
+          {/* Backdrop with vignette */}
+          <motion.div 
+            className="absolute inset-0 bg-background/80 backdrop-blur-md"
+            style={{
+              background: 'radial-gradient(circle at center, transparent 0%, hsl(var(--background) / 0.95) 70%)',
+            }}
+          />
           
+          {/* Energy accumulation rings */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            {[...Array(4)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute rounded-full border-2 border-gold/40"
+                style={{
+                  width: 120 + i * 80,
+                  height: 120 + i * 80,
+                }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{
+                  scale: [0.8, 1.1, 1],
+                  opacity: [0, 0.6, 0.3],
+                }}
+                transition={{
+                  duration: 0.8,
+                  delay: i * 0.15,
+                  repeat: Infinity,
+                  repeatDelay: 1.5,
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Converging particles */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
+            {[...Array(12)].map((_, i) => {
+              const angle = (i * 30) * (Math.PI / 180);
+              const startX = Math.cos(angle) * 400;
+              const startY = Math.sin(angle) * 400;
+              return (
+                <motion.div
+                  key={i}
+                  className="absolute w-2 h-2 rounded-full"
+                  style={{
+                    background: i % 2 === 0 
+                      ? 'linear-gradient(135deg, hsl(45 100% 60%), hsl(45 100% 40%))'
+                      : 'linear-gradient(135deg, hsl(280 80% 60%), hsl(280 80% 40%))',
+                    boxShadow: i % 2 === 0 
+                      ? '0 0 10px hsl(45 100% 50% / 0.8)'
+                      : '0 0 10px hsl(280 80% 50% / 0.8)',
+                  }}
+                  initial={{ x: startX, y: startY, opacity: 0, scale: 0 }}
+                  animate={{
+                    x: [startX, 0],
+                    y: [startY, 0],
+                    opacity: [0, 1, 0],
+                    scale: [0.5, 1.5, 0],
+                  }}
+                  transition={{
+                    duration: 1.2,
+                    delay: i * 0.1,
+                    repeat: Infinity,
+                    ease: 'easeIn',
+                  }}
+                />
+              );
+            })}
+          </div>
+
           {/* Main content */}
           <motion.div
-            initial={{ scale: 0.5, opacity: 0 }}
+            initial={{ scale: 0.3, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            exit={{ scale: 1.5, opacity: 0 }}
+            transition={{ type: 'spring', damping: 15, stiffness: 200 }}
             className="relative"
           >
-            {/* Outer glow rings */}
+            {/* Pulsing glow behind */}
             <motion.div
-              className="absolute inset-0 -m-20 rounded-full"
+              className="absolute inset-0 -m-12 rounded-full"
               style={{
-                background: 'radial-gradient(circle, hsl(45 100% 50% / 0.3) 0%, transparent 70%)',
+                background: 'radial-gradient(circle, hsl(45 100% 50% / 0.4) 0%, transparent 70%)',
               }}
               animate={{
                 scale: [1, 1.3, 1],
-                opacity: [0.5, 0.8, 0.5],
+                opacity: [0.4, 0.8, 0.4],
               }}
               transition={{
-                duration: 1.5,
+                duration: 0.8,
                 repeat: Infinity,
                 ease: 'easeInOut',
               }}
             />
-            
-            {/* Inner glow ring */}
+
+            {/* Center orb */}
             <motion.div
-              className="absolute inset-0 -m-10 rounded-full"
+              className="relative w-40 h-40 rounded-full flex items-center justify-center"
               style={{
-                background: 'radial-gradient(circle, hsl(280 80% 60% / 0.4) 0%, transparent 60%)',
+                background: 'linear-gradient(135deg, hsl(45 100% 50% / 0.2), hsl(280 80% 50% / 0.2))',
+                boxShadow: '0 0 60px hsl(45 100% 50% / 0.5), inset 0 0 40px hsl(45 100% 50% / 0.3)',
+                border: '2px solid hsl(45 100% 50% / 0.5)',
               }}
               animate={{
-                scale: [1.2, 1, 1.2],
-                opacity: [0.6, 1, 0.6],
+                boxShadow: [
+                  '0 0 60px hsl(45 100% 50% / 0.5), inset 0 0 40px hsl(45 100% 50% / 0.3)',
+                  '0 0 100px hsl(45 100% 50% / 0.8), inset 0 0 60px hsl(45 100% 50% / 0.5)',
+                  '0 0 60px hsl(45 100% 50% / 0.5), inset 0 0 40px hsl(45 100% 50% / 0.3)',
+                ],
               }}
               transition={{
                 duration: 1,
                 repeat: Infinity,
                 ease: 'easeInOut',
               }}
-            />
-
-            {/* Spinning particles ring */}
-            <motion.div
-              className="absolute inset-0 -m-16"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
             >
-              {[...Array(8)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute w-3 h-3 rounded-full"
-                  style={{
-                    background: i % 2 === 0 
-                      ? 'linear-gradient(135deg, hsl(45 100% 60%), hsl(45 100% 40%))'
-                      : 'linear-gradient(135deg, hsl(280 80% 60%), hsl(280 80% 40%))',
-                    top: '50%',
-                    left: '50%',
-                    transform: `rotate(${i * 45}deg) translateY(-80px) translateX(-50%)`,
-                    boxShadow: i % 2 === 0 
-                      ? '0 0 15px hsl(45 100% 50% / 0.8)'
-                      : '0 0 15px hsl(280 80% 50% / 0.8)',
-                  }}
-                  animate={{
-                    scale: [1, 1.5, 1],
-                    opacity: [0.7, 1, 0.7],
-                  }}
-                  transition={{
-                    duration: 0.6,
-                    repeat: Infinity,
-                    delay: i * 0.1,
-                  }}
-                />
-              ))}
-            </motion.div>
-
-            {/* Counter-rotating particles */}
-            <motion.div
-              className="absolute inset-0 -m-24"
-              animate={{ rotate: -360 }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-            >
-              {[...Array(6)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute w-2 h-2 rounded-full bg-gold/60"
-                  style={{
-                    top: '50%',
-                    left: '50%',
-                    transform: `rotate(${i * 60}deg) translateY(-110px) translateX(-50%)`,
-                    boxShadow: '0 0 10px hsl(45 100% 50% / 0.6)',
-                  }}
-                  animate={{
-                    opacity: [0.4, 1, 0.4],
-                  }}
-                  transition={{
-                    duration: 0.8,
-                    repeat: Infinity,
-                    delay: i * 0.15,
-                  }}
-                />
-              ))}
-            </motion.div>
-
-            {/* Main popup card */}
-            <motion.div
-              className="relative px-12 py-8 rounded-2xl border border-gold/30 overflow-hidden"
-              style={{
-                background: 'linear-gradient(135deg, hsl(var(--card)) 0%, hsl(280 30% 12%) 100%)',
-                boxShadow: '0 0 60px hsl(45 100% 50% / 0.3), 0 0 120px hsl(280 80% 50% / 0.2), inset 0 1px 0 hsl(45 100% 50% / 0.2)',
-              }}
-            >
-              {/* Shimmer sweep effect */}
+              {/* Rotating inner ring */}
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-gold/20 to-transparent"
+                className="absolute inset-4 rounded-full border-2 border-dashed border-gold/50"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+              />
+              
+              {/* Trophy icon with bounce */}
+              <motion.div
                 animate={{
-                  x: ['-100%', '200%'],
+                  y: [0, -8, 0],
+                  scale: [1, 1.1, 1],
                 }}
                 transition={{
-                  duration: 1.5,
+                  duration: 0.6,
                   repeat: Infinity,
                   ease: 'easeInOut',
                 }}
-              />
+              >
+                <Trophy className="w-16 h-16 text-gold" />
+              </motion.div>
+            </motion.div>
 
-              {/* Content */}
-              <div className="relative flex flex-col items-center gap-4">
-                {/* Animated icon */}
+            {/* Text below */}
+            <motion.div
+              className="absolute -bottom-20 left-1/2 -translate-x-1/2 whitespace-nowrap"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <motion.p
+                className="text-2xl md:text-3xl font-bold text-gold"
+                animate={{
+                  opacity: [0.7, 1, 0.7],
+                  textShadow: [
+                    '0 0 20px hsl(45 100% 50% / 0.5)',
+                    '0 0 40px hsl(45 100% 50% / 0.8)',
+                    '0 0 20px hsl(45 100% 50% / 0.5)',
+                  ],
+                }}
+                transition={{
+                  duration: 1,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+              >
+                幸運之星即將誕生
+              </motion.p>
+              
+              {/* Loading bar */}
+              <motion.div
+                className="mt-4 h-1 rounded-full overflow-hidden bg-gold/20"
+                style={{ width: 200 }}
+              >
                 <motion.div
-                  animate={{
-                    rotate: [0, 10, -10, 0],
-                    scale: [1, 1.1, 1],
-                  }}
-                  transition={{
-                    duration: 0.5,
-                    repeat: Infinity,
-                  }}
-                >
-                  <Sparkles className="w-12 h-12 text-gold" />
-                </motion.div>
-
-                {/* Text with gradient */}
-                <motion.h2
-                  className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent"
+                  className="h-full rounded-full"
                   style={{
-                    backgroundImage: 'linear-gradient(135deg, hsl(45 100% 60%), hsl(45 100% 40%), hsl(280 80% 60%))',
-                    backgroundSize: '200% 200%',
+                    background: 'linear-gradient(90deg, hsl(45 100% 50%), hsl(280 80% 60%), hsl(45 100% 50%))',
+                    backgroundSize: '200% 100%',
                   }}
-                  animate={{
-                    backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                  initial={{ width: '0%' }}
+                  animate={{ 
+                    width: '100%',
+                    backgroundPosition: ['0% 50%', '100% 50%'],
                   }}
                   transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
+                    width: { duration: 4.5, ease: 'easeInOut' },
+                    backgroundPosition: { duration: 1, repeat: Infinity, ease: 'linear' },
                   }}
-                >
-                  抽獎中...
-                </motion.h2>
-
-                {/* Animated dots */}
-                <div className="flex gap-2">
-                  {[0, 1, 2].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="w-2 h-2 rounded-full bg-gold"
-                      animate={{
-                        y: [0, -10, 0],
-                        opacity: [0.5, 1, 0.5],
-                      }}
-                      transition={{
-                        duration: 0.6,
-                        repeat: Infinity,
-                        delay: i * 0.15,
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
+                />
+              </motion.div>
             </motion.div>
           </motion.div>
         </motion.div>
