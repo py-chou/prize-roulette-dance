@@ -25,6 +25,7 @@ export const WinnerReveal = ({ winners, isVisible, onRedraw, onAddWinner, onClos
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={{ duration: 0.1 }}
           className="fixed inset-0 z-50 flex items-center justify-center"
         >
           {/* Backdrop */}
@@ -32,6 +33,7 @@ export const WinnerReveal = ({ winners, isVisible, onRedraw, onAddWinner, onClos
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.1 }}
             className="absolute inset-0 bg-background/95 backdrop-blur-xl"
           />
 
@@ -40,10 +42,10 @@ export const WinnerReveal = ({ winners, isVisible, onRedraw, onAddWinner, onClos
 
           {/* Content */}
           <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
+            initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            transition={{ type: 'spring', damping: 20 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
             className="relative z-10 w-full max-w-6xl mx-4 max-h-[90vh] overflow-y-auto hide-scrollbar"
           >
             {/* Close button */}
@@ -65,7 +67,7 @@ export const WinnerReveal = ({ winners, isVisible, onRedraw, onAddWinner, onClos
               className="text-center mb-8"
             >
               <h2 className="text-4xl md:text-6xl font-extrabold text-gradient-gold mb-2">
-                🎉 恭喜中獎！
+                恭喜以下中獎者
               </h2>
               <p className="text-muted-foreground text-lg">
                 共 {winners.length} 位幸運兒

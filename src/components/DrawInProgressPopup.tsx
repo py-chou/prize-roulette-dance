@@ -14,6 +14,7 @@ export const DrawInProgressPopup = ({ isVisible, winnerCount }: DrawInProgressPo
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
           className="fixed inset-0 z-[50] flex items-center justify-center"
         >
           {/* Backdrop with vignette */}
@@ -152,7 +153,7 @@ export const DrawInProgressPopup = ({ isVisible, winnerCount }: DrawInProgressPo
                   stroke="hsl(45 100% 50% / 0.2)"
                   strokeWidth="8"
                 />
-                {/* Progress circle */}
+                {/* Progress circle - synchronized with AvatarRow 4-stage animation */}
                 <motion.circle
                   cx="80"
                   cy="80"
@@ -162,10 +163,18 @@ export const DrawInProgressPopup = ({ isVisible, winnerCount }: DrawInProgressPo
                   strokeWidth="8"
                   strokeLinecap="round"
                   initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
+                  animate={{ 
+                    pathLength: [0, 0.25, 0.5, 0.75, 1] // Match 4 stages: 0%, 25%, 50%, 75%, 100%
+                  }}
                   transition={{
-                    duration: 2,
-                    ease: 'easeInOut',
+                    duration: 2, // Total 2 seconds, same as AvatarRow
+                    times: [0, 0.25, 0.5, 0.75, 1], // Match AvatarRow: 0.5s each stage
+                    ease: [
+                      [0.4, 0, 0.2, 1], // Stage 1: Slow start (0.5 seconds)
+                      [0.2, 0, 0.4, 1], // Stage 2: Medium acceleration (0.5 seconds)
+                      [0.1, 0, 0.3, 1], // Stage 3: Fast acceleration (0.5 seconds)
+                      [0, 0, 0.2, 1],   // Stage 4: Very fast (0.5 seconds)
+                    ],
                   }}
                 />
                 <defs>

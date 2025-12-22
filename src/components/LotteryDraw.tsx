@@ -47,17 +47,12 @@ export const LotteryDraw = () => {
     setPhase('spinning');
     setSpinPhase('peak'); // Start spinning immediately
     
-    // After spinning duration, show results
+    // After spinning duration, show results immediately
     setTimeout(() => {
-      setPhase('revealing');
       const selectedWinners = selectRandomWinners(participants, winnerCount);
       setWinners(selectedWinners);
-    }, 2000); // 2 seconds of spinning
-    
-    // Show winners modal
-    setTimeout(() => {
       setPhase('complete');
-    }, 2500);
+    }, 2000); // 2 seconds of spinning, then show results immediately
   }, [participants, winnerCount]);
 
   const handleRedraw = useCallback(() => {
@@ -71,17 +66,12 @@ export const LotteryDraw = () => {
       setPhase('spinning');
       setSpinPhase('peak'); // Start spinning immediately
       
-      // After spinning duration, show results
+      // After spinning duration, show results immediately
       setTimeout(() => {
-        setPhase('revealing');
         const selectedWinners = selectRandomWinners(participants, winnerCount);
         setWinners(selectedWinners);
-      }, 2000); // 2 seconds of spinning
-      
-      // Show winners modal
-      setTimeout(() => {
         setPhase('complete');
-      }, 2500);
+      }, 2000); // 2 seconds of spinning, then show results immediately
     }, 50);
   }, [participants, winnerCount]);
 

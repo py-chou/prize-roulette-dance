@@ -31,10 +31,10 @@ export const AddWinnerPopup = ({ winners, isVisible, onClose }: AddWinnerPopupPr
 
           {/* Content */}
           <motion.div
-            initial={{ scale: 0.5, opacity: 0, y: 50 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.5, opacity: 0, y: 50 }}
-            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             className="relative z-10 bg-card rounded-2xl shadow-2xl border-2 border-gold/30 w-[90vw] max-w-[800px] mx-4 overflow-visible"
           >
             {/* Close button */}
@@ -49,9 +49,9 @@ export const AddWinnerPopup = ({ winners, isVisible, onClose }: AddWinnerPopupPr
             <div className="relative p-6 md:p-8 flex flex-col items-center justify-center z-10">
               {/* Title */}
               <motion.div
-                initial={{ y: -20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
                 className="text-center mb-6"
               >
                 <h3 className="text-xl md:text-2xl font-extrabold text-gradient-gold mb-1">
@@ -67,9 +67,9 @@ export const AddWinnerPopup = ({ winners, isVisible, onClose }: AddWinnerPopupPr
                 {winners.map((winner, index) => (
                   <motion.div
                     key={winner.id}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.3 + index * 0.1 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.2, delay: index * 0.05 }}
                     className="flex flex-col items-center gap-3"
                   >
                     {/* Enhanced glow effect with rotating rings */}
@@ -152,9 +152,9 @@ export const AddWinnerPopup = ({ winners, isVisible, onClose }: AddWinnerPopupPr
 
                     {/* Name */}
                     <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.5 + index * 0.1 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.2, delay: 0.1 + index * 0.05 }}
                       className="text-center"
                     >
                       <p className="text-sm md:text-base font-extrabold text-gradient-gold mb-1">
