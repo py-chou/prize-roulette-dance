@@ -1,5 +1,6 @@
 import { Participant } from '@/types/participant';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AvatarDisplay } from './ui/avatar-display';
 import { X } from 'lucide-react';
 
 interface AddWinnerPopupProps {
@@ -63,15 +64,16 @@ export const AddWinnerPopup = ({ winners, isVisible, onClose }: AddWinnerPopupPr
               </motion.div>
 
               {/* Winners grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 w-full max-h-[60vh] overflow-y-auto hide-scrollbar px-2">
-                {winners.map((winner, index) => (
-                  <motion.div
-                    key={winner.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.2, delay: index * 0.05 }}
-                    className="flex flex-col items-center gap-3"
-                  >
+              <div className="w-full max-h-[60vh] overflow-y-auto hide-scrollbar px-2 p-8">
+                <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+                  {winners.map((winner, index) => (
+                    <motion.div
+                      key={winner.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.2, delay: index * 0.05 }}
+                      className="flex flex-col items-center gap-3"
+                    >
                     {/* Enhanced glow effect with rotating rings */}
                     <motion.div
                       className="relative group"
@@ -133,19 +135,13 @@ export const AddWinnerPopup = ({ winners, isVisible, onClose }: AddWinnerPopupPr
                         }}
                       />
 
-                      {/* Glow ring */}
-                      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-gold via-gold-glow to-gold animate-pulse-glow" 
-                        style={{ padding: '4px', borderRadius: '50%' }}
-                      >
-                        <div className="w-full h-full rounded-full bg-background" />
-                      </div>
-                      
-                      {/* Avatar */}
-                      <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-gold relative z-10">
-                        <img
-                          src={winner.avatar}
-                          alt={winner.name}
-                          className="w-full h-full object-cover"
+                      {/* Use AvatarDisplay component with enhanced glow effects */}
+                      <div className="relative z-10">
+                        <AvatarDisplay
+                          participant={winner}
+                          size="lg"
+                          showName={false}
+                          showGlow={true}
                         />
                       </div>
                     </motion.div>
@@ -160,12 +156,10 @@ export const AddWinnerPopup = ({ winners, isVisible, onClose }: AddWinnerPopupPr
                       <p className="text-sm md:text-base font-extrabold text-gradient-gold mb-1">
                         {winner.name}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        #{winner.id}
-                      </p>
                     </motion.div>
                   </motion.div>
                 ))}
+                </div>
               </div>
             </div>
           </motion.div>

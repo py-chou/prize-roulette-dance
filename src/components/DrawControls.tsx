@@ -28,40 +28,8 @@ export const DrawControls = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8"
+      className="flex flex-col items-center justify-center gap-4"
     >
-      {/* Participant count */}
-      <div className="flex items-center gap-3">
-        <label className="text-sm text-muted-foreground whitespace-nowrap">
-          參加人數
-        </label>
-        <input
-          type="number"
-          min={1}
-          max={1000}
-          value={participantCount}
-          onChange={(e) => onParticipantCountChange(Math.min(1000, Math.max(1, parseInt(e.target.value) || 1)))}
-          disabled={!isIdle}
-          className="w-24 px-3 py-2 rounded-lg bg-secondary border border-border text-foreground text-center disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary"
-        />
-      </div>
-
-      {/* Winner count */}
-      <div className="flex items-center gap-3">
-        <label className="text-sm text-muted-foreground whitespace-nowrap">
-          中獎人數
-        </label>
-        <input
-          type="number"
-          min={1}
-          max={200}
-          value={winnerCount}
-          onChange={(e) => onWinnerCountChange(Math.min(200, Math.max(1, parseInt(e.target.value) || 1)))}
-          disabled={!isIdle}
-          className="w-24 px-3 py-2 rounded-lg bg-secondary border border-border text-foreground text-center disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary"
-        />
-      </div>
-
       {/* Action buttons */}
       {isComplete ? (
         <motion.button
@@ -92,6 +60,41 @@ export const DrawControls = ({
           <Play className="w-4 h-4" />
         </motion.button>
       )}
+
+      {/* Input controls - moved below button and centered */}
+      <div className="flex flex-col md:flex-row items-center justify-center gap-4 mt-2">
+        {/* Winner count (抽獎名額) */}
+        <div className="flex items-center gap-3">
+          <label className="text-sm text-muted-foreground whitespace-nowrap">
+            抽獎名額
+          </label>
+          <input
+            type="number"
+            min={1}
+            max={200}
+            value={winnerCount}
+            onChange={(e) => onWinnerCountChange(Math.min(200, Math.max(1, parseInt(e.target.value) || 1)))}
+            disabled={!isIdle}
+            className="w-24 px-3 py-2 rounded-lg bg-secondary border border-border text-foreground text-center disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+
+        {/* Participant count */}
+        <div className="flex items-center gap-3">
+          <label className="text-sm text-muted-foreground whitespace-nowrap">
+            參加人數
+          </label>
+          <input
+            type="number"
+            min={1}
+            max={10000}
+            value={participantCount}
+            onChange={(e) => onParticipantCountChange(Math.min(10000, Math.max(1, parseInt(e.target.value) || 1)))}
+            disabled={!isIdle}
+            className="w-24 px-3 py-2 rounded-lg bg-secondary border border-border text-foreground text-center disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+      </div>
     </motion.div>
   );
 };

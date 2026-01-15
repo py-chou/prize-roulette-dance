@@ -1,8 +1,10 @@
 import { Participant } from '@/types/participant';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WinnerCard } from './WinnerCard';
-import { RotateCcw, X, Plus, Grid3x3, List } from 'lucide-react';
-import { useState } from 'react';
+import { AvatarDisplay } from './ui/avatar-display';
+import { X, Plus, Grid3x3, List } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { PixiConfetti } from './PixiConfetti';
 
 interface WinnerRevealProps {
   winners: Participant[];
@@ -11,12 +13,46 @@ interface WinnerRevealProps {
   onAddWinner?: () => void;
   onClose?: () => void;
   totalParticipants?: number;
+  eventName?: string;
 }
 
-export const WinnerReveal = ({ winners, isVisible, onRedraw, onAddWinner, onClose, totalParticipants = 0 }: WinnerRevealProps) => {
+// Component wrapper for content with CSS transition
+const ContentWrapper = ({ children, isVisible }: { children: React.ReactNode; isVisible: boolean }) => {
+  const [shouldAnimate, setShouldAnimate] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isVisible && contentRef.current) {
+      // Force reflow to ensure initial state is painted, then trigger animation
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setShouldAnimate(true);
+        });
+      });
+    } else {
+      setShouldAnimate(false);
+    }
+  }, [isVisible]);
+
+  return (
+    <div
+      ref={contentRef}
+      className="relative z-10 w-full max-w-8xl mx-4 max-h-[90vh] overflow-y-auto hide-scrollbar p-4"
+      style={{
+        transform: shouldAnimate ? 'scale(1)' : 'scale(0.95)',
+        opacity: shouldAnimate ? 1 : 0,
+        transition: 'transform 0.2s ease-out, opacity 0.2s ease-out',
+        willChange: 'transform, opacity',
+        backfaceVisibility: 'hidden',
+      }}
+    >
+      {children}
+    </div>
+  );
+};
+
+export const WinnerReveal = ({ winners, isVisible, onRedraw, onAddWinner, onClose, totalParticipants = 0, eventName }: WinnerRevealProps) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const displayWinners = viewMode === 'grid' ? winners.slice(0, 50) : winners;
-  const remainingCount = winners.length - displayWinners.length;
 
   return (
     <AnimatePresence>
@@ -29,25 +65,20 @@ export const WinnerReveal = ({ winners, isVisible, onRedraw, onAddWinner, onClos
           className="fixed inset-0 z-50 flex items-center justify-center"
         >
           {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.1 }}
+          <div
             className="absolute inset-0 bg-background/95 backdrop-blur-xl"
+            style={{
+              opacity: isVisible ? 1 : 0,
+              transition: 'opacity 0.1s ease-out',
+              willChange: 'opacity'
+            }}
           />
 
           {/* Radial glow */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_hsl(45_100%_50%_/_0.1)_0%,_transparent_60%)]" />
 
           {/* Content */}
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="relative z-10 w-full max-w-6xl mx-4 max-h-[90vh] overflow-y-auto hide-scrollbar"
-          >
+          <ContentWrapper isVisible={isVisible}>
             {/* Close button */}
             <motion.button
               initial={{ opacity: 0 }}
@@ -66,6 +97,11 @@ export const WinnerReveal = ({ winners, isVisible, onRedraw, onAddWinner, onClos
               transition={{ delay: 0.2 }}
               className="text-center mb-8"
             >
+              {eventName && (
+                <h3 className="text-3xl font-extrabold text-gradient-gold mb-4">
+                  {eventName}
+                </h3>
+              )}
               <h2 className="text-4xl md:text-6xl font-extrabold text-gradient-gold mb-2">
                 恭喜以下中獎者
               </h2>
@@ -109,31 +145,21 @@ export const WinnerReveal = ({ winners, isVisible, onRedraw, onAddWinner, onClos
 
             {/* Winners display */}
             {viewMode === 'grid' ? (
-              <>
-                <div className="flex flex-wrap justify-center gap-6 md:gap-8 px-4">
-                  {displayWinners.map((winner, index) => (
+              <div className="max-h-[50vh] overflow-y-auto p-8 hide-scrollbar">
+                <div className="flex flex-wrap justify-center gap-6 md:gap-8">
+                  {winners.map((winner, index) => (
                     <WinnerCard
                       key={winner.id}
                       winner={winner}
                       index={index}
-                      total={displayWinners.length}
+                      total={winners.length}
                     />
                   ))}
                 </div>
-                {remainingCount > 0 && (
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1 }}
-                    className="text-center mt-8 text-muted-foreground"
-                  >
-                    還有 {remainingCount} 位中獎者...（請切換到列表模式查看全部）
-                  </motion.p>
-                )}
-              </>
+              </div>
             ) : (
-              <div className="max-h-[50vh] overflow-y-auto px-4 hide-scrollbar">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="max-h-[50vh] overflow-y-auto hide-scrollbar p-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
                   {winners.map((winner, index) => (
                     <motion.div
                       key={winner.id}
@@ -143,16 +169,15 @@ export const WinnerReveal = ({ winners, isVisible, onRedraw, onAddWinner, onClos
                       className="flex items-center gap-3 p-3 rounded-lg bg-card/50 hover:bg-card/80 transition-colors"
                     >
                       <div className="relative flex-shrink-0">
-                        <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gold">
-                          <img
-                            src={winner.avatar}
-                            alt={winner.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
+                        <AvatarDisplay
+                          participant={winner}
+                          size="sm"
+                          showName={false}
+                          showGlow={false}
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-gradient-gold truncate">
+                        <p className="font-bold text-gradient-gold line-clamp-2">
                           {winner.name}
                         </p>
                         {winner.isAdditional && (
@@ -160,9 +185,6 @@ export const WinnerReveal = ({ winners, isVisible, onRedraw, onAddWinner, onClos
                             加抽
                           </span>
                         )}
-                        <p className="text-xs text-muted-foreground">
-                          #{winner.id}
-                        </p>
                       </div>
                     </motion.div>
                   ))}
@@ -188,44 +210,16 @@ export const WinnerReveal = ({ winners, isVisible, onRedraw, onAddWinner, onClos
                   加抽
                 </motion.button>
               )}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={onRedraw}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-secondary hover:bg-secondary/80 text-secondary-foreground font-medium transition-colors border border-border"
-              >
-                <RotateCcw className="w-5 h-5" />
-                重抽一次
-              </motion.button>
             </motion.div>
-          </motion.div>
+          </ContentWrapper>
 
-          {/* Confetti particles */}
-          {[...Array(20)].map((_, i) => (
-            <motion.div
-              key={i}
-              initial={{
-                opacity: 0,
-                x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1000),
-                y: -20,
-              }}
-              animate={{
-                opacity: [0, 1, 1, 0],
-                y: (typeof window !== 'undefined' ? window.innerHeight : 800) + 100,
-                rotate: Math.random() * 360,
-              }}
-              transition={{
-                duration: 3 + Math.random() * 2,
-                delay: Math.random() * 0.5,
-                repeat: Infinity,
-                repeatDelay: Math.random() * 2,
-              }}
-              className="absolute w-3 h-3 rounded-full"
-              style={{
-                background: ['hsl(45 100% 50%)', 'hsl(280 80% 60%)', 'hsl(190 100% 50%)', 'hsl(0 84% 60%)'][i % 4],
-              }}
-            />
-          ))}
+          {/* PixiJS Confetti particles */}
+          <PixiConfetti 
+            isActive={isVisible} 
+            particleCount={20}
+            width={typeof window !== 'undefined' ? window.innerWidth : 1000}
+            height={typeof window !== 'undefined' ? window.innerHeight : 800}
+          />
         </motion.div>
       )}
     </AnimatePresence>

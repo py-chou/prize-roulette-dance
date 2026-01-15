@@ -1,8 +1,11 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Participant, DrawPhase } from '@/types/participant';
+import { Participant, DrawPhase, SpinPhase } from '@/types/participant';
 import { generateParticipants, selectRandomWinners } from '@/utils/generateParticipants';
-import { AvatarRow, SpinPhase } from './AvatarRow';
+import { getRemainingParticipants } from '@/utils/participantUtils';
+import { resetDrawState, startDrawProcess, RESET_DELAY } from '@/utils/drawUtils';
+import { PixiAvatarRow } from './PixiAvatarRow';
+import { PixiBackground } from './PixiBackground';
 import { WinnerReveal } from './WinnerReveal';
 import { DrawControls } from './DrawControls';
 import { AddWinnerPopup } from './AddWinnerPopup';
@@ -12,8 +15,8 @@ import { AddWinnerCountPopup } from './AddWinnerCountPopup';
 const ROWS_COUNT = 6;
 
 export const LotteryDraw = () => {
-  const [participantCount, setParticipantCount] = useState(100);
-  const [winnerCount, setWinnerCount] = useState(3);
+  const [participantCount, setParticipantCount] = useState(1000);
+  const [winnerCount, setWinnerCount] = useState(100);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [winners, setWinners] = useState<Participant[]>([]);
   const [phase, setPhase] = useState<DrawPhase>('idle');
@@ -21,6 +24,18 @@ export const LotteryDraw = () => {
   const [newWinners, setNewWinners] = useState<Participant[]>([]);
   const [showAddWinnerPopup, setShowAddWinnerPopup] = useState(false);
   const [showAddWinnerCountPopup, setShowAddWinnerCountPopup] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [showDrawInProgress, setShowDrawInProgress] = useState(false);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, []);
 
   // Generate participants on count change
   useEffect(() => {
@@ -44,53 +59,90 @@ export const LotteryDraw = () => {
   }, [participants]);
 
   const handleStartDraw = useCallback(() => {
-    setPhase('spinning');
-    setSpinPhase('peak'); // Start spinning immediately
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
     
-    // After spinning duration, show results immediately
-    setTimeout(() => {
-      const selectedWinners = selectRandomWinners(participants, winnerCount);
-      setWinners(selectedWinners);
-      setPhase('complete');
-    }, 2000); // 2 seconds of spinning, then show results immediately
+    // 使用共用的抽獎邏輯
+    timeoutRef.current = startDrawProcess({
+      participants,
+      winnerCount,
+      setPhase,
+      setSpinPhase,
+      setWinners,
+      setShowDrawInProgress,
+      onComplete: () => {
+        timeoutRef.current = null;
+      },
+    });
   }, [participants, winnerCount]);
 
   const handleRedraw = useCallback(() => {
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    
     // Reset to idle first to ensure animation restarts properly
-    setPhase('idle');
-    setSpinPhase('idle');
-    setWinners([]);
+    resetDrawState({
+      setPhase,
+      setSpinPhase,
+      setWinners,
+      setShowDrawInProgress,
+    });
     
     // Small delay to ensure state reset, then start draw
     setTimeout(() => {
-      setPhase('spinning');
-      setSpinPhase('peak'); // Start spinning immediately
-      
-      // After spinning duration, show results immediately
-      setTimeout(() => {
-        const selectedWinners = selectRandomWinners(participants, winnerCount);
-        setWinners(selectedWinners);
-        setPhase('complete');
-      }, 2000); // 2 seconds of spinning, then show results immediately
-    }, 50);
+      timeoutRef.current = startDrawProcess({
+        participants,
+        winnerCount,
+        setPhase,
+        setSpinPhase,
+        setWinners,
+        setShowDrawInProgress,
+        onComplete: () => {
+          timeoutRef.current = null;
+        },
+      });
+    }, RESET_DELAY);
   }, [participants, winnerCount]);
 
   const handleReset = useCallback(() => {
-    setPhase('idle');
-    setSpinPhase('idle');
-    setWinners([]);
+    resetDrawState({
+      setPhase,
+      setSpinPhase,
+      setWinners,
+      setShowDrawInProgress,
+    });
     setParticipants(generateParticipants(participantCount));
   }, [participantCount]);
 
   const handleCloseReveal = useCallback(() => {
+    // Completely reset all state to trigger full page re-render
+    setWinners([]);
+    setNewWinners([]);
+    setShowAddWinnerPopup(false);
+    setShowAddWinnerCountPopup(false);
+    setShowDrawInProgress(false);
+    // Reset phase and spin phase
     setPhase('idle');
     setSpinPhase('idle');
-  }, []);
+    // Force complete re-render by clearing and regenerating participants
+    // Use a small delay to ensure state updates are processed
+    setTimeout(() => {
+      setParticipants([]);
+      setTimeout(() => {
+        setParticipants(generateParticipants(participantCount));
+      }, 0);
+    }, 0);
+  }, [participantCount]);
 
   const handleAddWinner = useCallback(() => {
     // Get remaining participants (exclude already selected winners)
-    const winnerIds = new Set(winners.map(w => w.id));
-    const remainingParticipants = participants.filter(p => !winnerIds.has(p.id));
+    const remainingParticipants = getRemainingParticipants(participants, winners);
     
     if (remainingParticipants.length === 0) {
       // No more participants available
@@ -103,8 +155,7 @@ export const LotteryDraw = () => {
 
   const handleConfirmAddWinnerCount = useCallback((count: number) => {
     // Get remaining participants (exclude already selected winners)
-    const winnerIds = new Set(winners.map(w => w.id));
-    const remainingParticipants = participants.filter(p => !winnerIds.has(p.id));
+    const remainingParticipants = getRemainingParticipants(participants, winners);
     
     if (remainingParticipants.length === 0) {
       return;
@@ -141,34 +192,13 @@ export const LotteryDraw = () => {
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-background overflow-hidden">
+    <div className="relative h-screen bg-background overflow-hidden flex flex-col">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_hsl(280_80%_15%_/_0.3)_0%,_transparent_50%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_hsl(45_100%_20%_/_0.1)_0%,_transparent_50%)]" />
       
-      {/* Animated background during spinning */}
-      <AnimatePresence>
-        {phase === 'spinning' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0"
-          >
-            <motion.div
-              className="absolute inset-0 bg-[radial-gradient(circle_at_center,_hsl(45_100%_50%_/_0.15)_0%,_transparent_50%)]"
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.5, 1, 0.5],
-              }}
-              transition={{
-                duration: 0.5,
-                repeat: Infinity,
-              }}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* PixiJS animated background during spinning */}
+      <PixiBackground isSpinning={phase === 'spinning'} />
       
       {/* Grid pattern */}
       <div 
@@ -179,49 +209,43 @@ export const LotteryDraw = () => {
         }}
       />
 
-      {/* Header */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative z-10 text-center py-8 md:py-12"
-      >
-        <h1 className="text-4xl md:text-6xl font-extrabold mb-2">
-          <span className="text-gradient-gold">202512 日韓連線直播抽獎</span>
-        </h1>
-        <p className="text-muted-foreground text-lg">
-          線上抽獎系統
-        </p>
-      </motion.header>
+      {/* Scrollable content area */}
+      <div className="flex-1 min-h-0 flex flex-col relative z-10">
+        {/* Header */}
+        <motion.header
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center pt-8 md:pt-12 flex-shrink-0"
+        >
+          <h1 className="text-4xl md:text-6xl font-extrabold mb-2">
+            <span className="text-gradient-gold">202512 日韓連線直播抽獎</span>
+          </h1>
+          <p className="text-white font-bold text-lg">
+            抽獎名額：{winnerCount} / 參加人數：{participantCount}
+          </p>
+        </motion.header>
 
-      {/* Avatar rows */}
-      <div className="relative z-10 py-4 md:py-8">
-        <AnimatePresence>
-          {phase !== 'complete' && (
-            <motion.div
-              initial={{ opacity: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.5 }}
-              className="space-y-2"
-            >
-              {rows.map((rowParticipants, index) => (
-                <AvatarRow
-                  key={index}
-                  participants={rowParticipants}
-                  direction={index % 2 === 0 ? 'left' : 'right'}
-                  spinPhase={spinPhase}
-                  phase={phase}
-                  rowIndex={index}
-                  totalRows={ROWS_COUNT}
-                />
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* PixiJS Avatar rows - always rendered, covered by WinnerReveal when visible */}
+        {/* Container height adapts to remaining space after Header and Controls */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="py-4 md:py-8 space-y-2">
+            {rows.map((rowParticipants, index) => (
+              <PixiAvatarRow
+                key={`${index}-${participants.length}`}
+                participants={rowParticipants}
+                direction={index % 2 === 0 ? 'left' : 'right'}
+                spinPhase={spinPhase}
+                phase={phase}
+                rowIndex={index}
+                totalRows={ROWS_COUNT}
+              />
+            ))}
+          </div>
+        </div>
       </div>
 
-
-      {/* Controls */}
-      <div className="relative z-10 py-8 px-4">
+      {/* Controls - Fixed at bottom */}
+      <div className="relative z-10 py-4 md:py-6 px-4 bg-background/95 backdrop-blur-xl border-t border-border/50 flex-shrink-0">
         <DrawControls
           phase={phase}
           participantCount={participantCount}
@@ -241,12 +265,14 @@ export const LotteryDraw = () => {
         onAddWinner={handleAddWinner}
         onClose={handleCloseReveal}
         totalParticipants={participants.length}
+        eventName="202512 日韓連線直播抽獎"
       />
 
       {/* Add winner count popup */}
       <AddWinnerCountPopup
         isVisible={showAddWinnerCountPopup}
         maxCount={Math.min(
+          100, // 单次加抽最高100位
           participants.length - winners.length,
           participants.length
         )}
@@ -265,7 +291,7 @@ export const LotteryDraw = () => {
 
       {/* Draw in progress popup */}
       <DrawInProgressPopup
-        isVisible={phase === 'spinning'}
+        isVisible={showDrawInProgress}
         winnerCount={winnerCount}
       />
     </div>

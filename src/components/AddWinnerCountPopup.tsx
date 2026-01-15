@@ -108,7 +108,7 @@ export const AddWinnerCountPopup = ({
                 選擇加抽人數
               </h3>
               <p className="text-sm text-muted-foreground">
-                最多可加抽 {maxCount} 位
+                單次加抽最高100位，但可以加抽多次
               </p>
             </motion.div>
 

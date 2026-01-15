@@ -6,3 +6,5 @@ export interface Participant {
 }
 
 export type DrawPhase = 'idle' | 'spinning' | 'revealing' | 'complete';
+
+export type SpinPhase = 'idle' | 'accelerating' | 'peak' | 'decelerating';

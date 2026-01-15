@@ -1,10 +1,48 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy } from 'lucide-react';
+import { PixiConvergingParticles } from './PixiConvergingParticles';
+import { useEffect, useRef, useState } from 'react';
 
 interface DrawInProgressPopupProps {
   isVisible: boolean;
   winnerCount: number;
 }
+
+// Component wrapper for main content with CSS transition
+const MainContentWrapper = ({ children }: { children: React.ReactNode }) => {
+  const [shouldAnimate, setShouldAnimate] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Force reflow to ensure initial state is painted, then trigger animation
+    if (contentRef.current) {
+      // Double RAF to ensure browser has painted initial state
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setShouldAnimate(true);
+        });
+      });
+    }
+  }, []);
+
+  return (
+    <div
+      ref={contentRef}
+      className="relative"
+      style={{
+        width: '100%',
+        height: '100%',
+        transform: shouldAnimate ? 'scale(1)' : 'scale(0.3)',
+        opacity: shouldAnimate ? 1 : 0,
+        transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        willChange: 'transform, opacity',
+        backfaceVisibility: 'hidden',
+      }}
+    >
+      {children}
+    </div>
+  );
+};
 
 export const DrawInProgressPopup = ({ isVisible, winnerCount }: DrawInProgressPopupProps) => {
   return (
@@ -53,57 +91,21 @@ export const DrawInProgressPopup = ({ isVisible, winnerCount }: DrawInProgressPo
             ))}
           </div>
 
-          {/* Converging particles */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
-            {[...Array(12)].map((_, i) => {
-              const angle = (i * 30) * (Math.PI / 180);
-              const startX = Math.cos(angle) * 400;
-              const startY = Math.sin(angle) * 400;
-              return (
-                <motion.div
-                  key={i}
-                  className="absolute w-2 h-2 rounded-full"
-                  style={{
-                    background: i % 2 === 0 
-                      ? 'linear-gradient(135deg, hsl(45 100% 60%), hsl(45 100% 40%))'
-                      : 'linear-gradient(135deg, hsl(30 100% 55%), hsl(30 100% 40%))',
-                    boxShadow: i % 2 === 0 
-                      ? '0 0 10px hsl(45 100% 50% / 0.8)'
-                      : '0 0 10px hsl(30 100% 50% / 0.8)',
-                  }}
-                  initial={{ x: startX, y: startY, opacity: 0, scale: 0 }}
-                  animate={{
-                    x: [startX, 0],
-                    y: [startY, 0],
-                    opacity: [0, 1, 0],
-                    scale: [0.5, 1.5, 0],
-                  }}
-                  transition={{
-                    duration: 1.2,
-                    delay: i * 0.1,
-                    repeat: Infinity,
-                    ease: 'easeIn',
-                  }}
-                />
-              );
-            })}
-          </div>
+          {/* Converging particles - PixiJS version */}
+          <PixiConvergingParticles particleCount={12} isVisible={isVisible} />
 
           {/* Main content */}
-          <motion.div
-            initial={{ scale: 0.3, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 1.5, opacity: 0 }}
-            transition={{ type: 'spring', damping: 15, stiffness: 200 }}
-            className="relative"
-            style={{ width: '100%', height: '100%' }}
-          >
+          <MainContentWrapper>
             {/* Pulsing glow behind */}
             <motion.div
               className="absolute rounded-full"
               style={{
                 width: '180px',
                 height: '180px',
+                top: '50%',
+                left: '50%',
+                marginTop: '-90px',
+                marginLeft: '-90px',
                 background: 'radial-gradient(circle, hsl(45 100% 50% / 0.4) 0%, transparent 70%)',
               }}
               animate={{
@@ -153,7 +155,7 @@ export const DrawInProgressPopup = ({ isVisible, winnerCount }: DrawInProgressPo
                   stroke="hsl(45 100% 50% / 0.2)"
                   strokeWidth="8"
                 />
-                {/* Progress circle - synchronized with AvatarRow 4-stage animation */}
+                {/* Progress circle - 4-stage animation completing in 2.5 seconds */}
                 <motion.circle
                   cx="80"
                   cy="80"
@@ -167,13 +169,13 @@ export const DrawInProgressPopup = ({ isVisible, winnerCount }: DrawInProgressPo
                     pathLength: [0, 0.25, 0.5, 0.75, 1] // Match 4 stages: 0%, 25%, 50%, 75%, 100%
                   }}
                   transition={{
-                    duration: 2, // Total 2 seconds, same as AvatarRow
-                    times: [0, 0.25, 0.5, 0.75, 1], // Match AvatarRow: 0.5s each stage
+                    duration: 2.5, // Total 2.5 seconds
+                    times: [0, 0.25, 0.5, 0.75, 1], // 4 stages: 0.625s each stage
                     ease: [
-                      [0.4, 0, 0.2, 1], // Stage 1: Slow start (0.5 seconds)
-                      [0.2, 0, 0.4, 1], // Stage 2: Medium acceleration (0.5 seconds)
-                      [0.1, 0, 0.3, 1], // Stage 3: Fast acceleration (0.5 seconds)
-                      [0, 0, 0.2, 1],   // Stage 4: Very fast (0.5 seconds)
+                      [0.4, 0, 0.2, 1], // Stage 1: Slow start (0.625 seconds)
+                      [0.2, 0, 0.4, 1], // Stage 2: Medium acceleration (0.625 seconds)
+                      [0.1, 0, 0.3, 1], // Stage 3: Fast acceleration (0.625 seconds)
+                      [0, 0, 0.2, 1],   // Stage 4: Very fast (0.625 seconds)
                     ],
                   }}
                 />
@@ -218,7 +220,7 @@ export const DrawInProgressPopup = ({ isVisible, winnerCount }: DrawInProgressPo
                 left: '50%',
                 marginTop: '100px',
                 marginLeft: '-100px',
-                width: '200px',
+                
               }}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -227,7 +229,7 @@ export const DrawInProgressPopup = ({ isVisible, winnerCount }: DrawInProgressPo
               <motion.h2
                 className="text-2xl md:text-3xl font-bold text-gradient-gold mb-2"
                 animate={{
-                  opacity: [0.7, 1, 0.7],
+                  opacity: [1,1,1],
                   textShadow: [
                     '0 0 20px hsl(45 100% 50% / 0.5)',
                     '0 0 40px hsl(45 100% 50% / 0.8)',
@@ -246,7 +248,7 @@ export const DrawInProgressPopup = ({ isVisible, winnerCount }: DrawInProgressPo
                 正在抽出 {winnerCount} 位得獎者
               </p>
             </motion.div>
-          </motion.div>
+          </MainContentWrapper>
         </motion.div>
       )}
     </AnimatePresence>
